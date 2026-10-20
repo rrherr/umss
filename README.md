@@ -58,7 +58,7 @@ uv add git+https://github.com/rrherr/umss
 import umss
 
 model = umss.load("cpu")                     # 4 sources (n_sources=2 for the 2-source model); or "cuda", "mps"
-f0 = ...                                     # Hz per voice, 0 = silent: (umss.n_frames(len(mono_16k)), voices)
+f0 = umss.f0_frames(contours, len(mono_16k)) # contours (voices, frames) in Hz, 0 = silent, over the same span
 voices = umss.separate(model, mono_16k, f0)  # float32 array (voices, samples)
 ```
 

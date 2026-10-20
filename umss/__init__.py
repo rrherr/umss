@@ -16,10 +16,10 @@ import numpy as np
 import torch
 from numpy.typing import NDArray
 
-from .ddsp import spectral_ops
+from .ddsp import core, spectral_ops
 from .model import SourceFilterMixtureAutoencoder2
 
-__all__ = ["CHECKPOINTS", "HOP_LENGTH", "SAMPLE_RATE", "load", "n_frames", "separate"]
+__all__ = ["CHECKPOINTS", "HOP_LENGTH", "SAMPLE_RATE", "f0_frames", "load", "n_frames", "separate"]
 
 SAMPLE_RATE = 16000
 """The models' sample rate (mono)."""
@@ -54,6 +54,19 @@ def load(device: str = "cpu", n_sources: int = 4) -> SourceFilterMixtureAutoenco
 def n_frames(n_samples: int) -> int:
     """The number of f0 frames `separate` expects for `n_samples` of audio."""
     return n_samples // HOP_LENGTH + 1
+
+
+def f0_frames(f0: NDArray[np.floating], n_samples: int) -> NDArray[np.float32]:
+    """Pitch contours spanning `n_samples` of audio, on `separate`'s frames: (n_frames, voices).
+
+    `f0` is (voices, frames) on any grid covering the same span. It is resampled linearly by
+    frame count, zeros included, to `n_samples // HOP_LENGTH` frames, as the upstream
+    preprocessing does, and a silent frame is added at the end.
+    """
+    x = torch.as_tensor(np.asarray(f0, dtype=np.float32))
+    out = core.resample(x, n_samples // HOP_LENGTH).transpose(0, 1)
+    out = torch.cat([out, torch.zeros(1, out.shape[1])])
+    return np.ascontiguousarray(out.numpy(), dtype=np.float32)
 
 
 def _masks(

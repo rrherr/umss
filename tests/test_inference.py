@@ -50,3 +50,10 @@ def test_rejects_a_misaligned_f0(model):
         umss.separate(model, np.zeros(16000, np.float32), np.zeros((10, 2), np.float32))
     with pytest.raises(ValueError):
         umss.separate(model, np.zeros(16000, np.float32), np.zeros((umss.n_frames(16000), 5), np.float32))
+
+
+def test_f0_frames_fit_separate():
+    f0 = np.array([[200.0, 200.0, 0.0, 0.0], [0.0, 100.0, 100.0, 100.0]])
+    frames = umss.f0_frames(f0, 16000)
+    assert frames.shape == (umss.n_frames(16000), 2)
+    assert frames[0, 0] == 200.0 and frames[-1].tolist() == [0.0, 0.0]
